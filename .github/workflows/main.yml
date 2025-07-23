@@ -23,12 +23,12 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: 🛠️ Build frontend Docker image
+      - name: 🛠️ Build and push frontend Docker image
         run: |
           docker build -t $DOCKER_IMAGE_FRONTEND ./frontend
           docker push $DOCKER_IMAGE_FRONTEND
 
-      - name: 🛠️ Build backend Docker image
+      - name: 🛠️ Build and push backend Docker image
         run: |
           docker build -t $DOCKER_IMAGE_BACKEND ./backend
           docker push $DOCKER_IMAGE_BACKEND
@@ -36,13 +36,14 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
-
     steps:
       - name: 🔄 Checkout code
         uses: actions/checkout@v3
 
-      - name: 🧩 Set up Kubeconfig (for cloud Kubernetes)
-        if: ${{ secrets.KUBE_CONFIG_DATA != '' }}
+      - name: 📂 Set up kubeconfig for cloud Kubernetes
+        if: ${{ env.KUBE_CONFIG_EXISTS == 'true' }}
+        env:
+          KUBE_CONFIG_EXISTS: ${{ secrets.KUBE_CONFIG_DATA != '' }}
         run: |
           echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > $HOME/.kube/config
 
